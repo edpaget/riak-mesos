@@ -4,7 +4,8 @@
             [ring.middleware.json :refer [wrap-json-response wrap-json-body]]
             [riak-mesos.curator :refer [make-curator]]
             [org.httpkit.server :refer [run-server]]
-            [liberator.core :refer [resource]]))
+            [liberator.core :refer [resource]]
+            [clojure.java.io :as io]))
 
 (defn nodes
   [ctx]
@@ -24,8 +25,10 @@
   (resource 
     :allowed-methods [:get :post]
     :allowed? {:post (fn [ctx] (> (nodes ctx) (count @running)))}
-    :available-media-types ["application/json"]
-    :handle-ok (fn [_] {:nodes (count @running)})
+    :available-media-types ["application/json" "text/html"]
+    :handle-ok (fn [ctx] (condp = (get-in ctx [:representation :media-type]) 
+                           "application/json" {:nodes (count @running)}
+                           "text/html" (slurp (io/resource "index.html"))))
     :post! (fn [ctx] 
              (let [pending-nodes (difference (into #{} (range 0 (nodes ctx))) 
                                              @running)] 
@@ -37,7 +40,6 @@
         (ANY "/riak_cluster" [] (riak-cluster pending running))
         ;;(ANY "/riak_clusters/:id" [id] (riak-cluster curator id))
         )
-      wrap-json-response
       wrap-json-body))
 
 (defn start-server
