@@ -1,0 +1,84 @@
+<!DOCTYPE>
+<html>
+  <head>
+    <title>Launch Riak</title>
+    <style>
+      form {
+        margin: 0 auto;
+        margin-top: 120px;
+        width: 200px;
+        padding: 40px;
+        border: 1px solid #cdcdcd;
+      }
+
+      body {
+        font-family: "Droid Sans", Helvetica, Arial, sans-serif;
+      }
+
+      .title {
+        position: absolute;
+        color: white;
+        background: black;
+        width: 100%;
+        top: 0;
+        left: 0;
+        height: 40px;
+      }
+
+      .title h1 {
+        margin: 5px;
+        margin-left: 30px;
+        font-size: 30px;
+      }
+
+      input, button, label {
+        display: block;
+        font-size: 25px;
+        margin-bottom: 20px;
+      }
+
+      input {
+        width: 200px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="title">
+      <h1>Riak on Mesos</h1>
+    </div>
+
+    <form>
+      <label for="nodes">Number of Nodes</label>
+      <input name="nodes" type="text" />
+      <button id="sub">Launch!</button>
+    </form>
+
+    <script>
+      var input = document.querySelector('input');
+      var button = document.querySelector('button');
+
+      function formSubmit(event) {
+        event.preventDefault();
+        var req = new XMLHttpRequest(),
+          value = parseInt(input.value);
+
+        req.open("POST", "/riak_cluster");
+        req.setRequestHeader("Content-Type", "application/json");
+        req.setRequestHeader("Accept", "application/json");
+        req.send(JSON.stringify({nodes: value}));
+      }
+
+      funtion getSize() {
+        var req = new XMLHttpRequest();
+
+        req.open("GET", "/riak_cluster");
+        req.setRequestHeader("Accept", "application/json");
+        req.send();
+      }
+
+      button.addEventListener('click', formSubmit);
+
+    </script>
+  </body>
+</html>
