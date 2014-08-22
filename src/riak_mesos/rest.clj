@@ -16,24 +16,33 @@
     :allowed-methods [:get :post]
     :available-media-types ["application/json"]
     :handle-ok (fn [_] (state/all-clusters curator))
-    :post! (fn [ctx] (state/write! curator 1 (body ctx)))))
+    :handle-created (fn [ctx] (:entry ctx))
+    :post! (fn [ctx] (state/write! curator 1 (body ctx) ctx))))
 
 (defn riak-cluster 
   [curator id]
   (resource 
     :allowed-methods [:get :put :delete]
     :available-media-types ["application/json"]
+    :exists? (fn [ctx] (state/exists? curator id ctx))
+    :existed? (fn [_] (state/existed? curator id))
     :handle-ok (fn [ctx] (:entry ctx))
-    :put! (fn [ctx] (state/write! curator id (body ctx)))
-    :delete! (fn [_] (state/write! curator id))))
+    :put! (fn [ctx] (state/write! curator id (body ctx) ctx))
+    :delete! (fn [_] (state/delete! curator id))))
 
 (defn app-routes
   [curator]
-  (routes
-    (ANY "/riak_clusters" [] (riak-clusters curator))
-    (ANY "/riak_clusters/:id" [id] (riak-cluster curator id))))
+  (-> (routes
+        (ANY "/riak_clusters" [] (riak-clusters curator))
+        (ANY "/riak_clusters/:id" [id] (riak-cluster curator id)))
+      wrap-json-response
+      wrap-json-body))
 
 (defn start-server
   [zks port]
   (let [curator (make-curator zks)] 
     (run-server (app-routes curator) {:port port})))
+
+(defn -main
+  [& [zks port]]
+  (start-server zks (Integer/parseInt port)))

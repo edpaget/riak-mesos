@@ -1,10 +1,12 @@
 (ns riak-mesos.state
   (:require [riak-mesos.curator]
-            [cheshire.core :refer [parse-string generate-string]]))
+            [cheshire.core :refer [parse-string generate-string]])
+  (:import org.apache.zookeeper.KeeperException$NoNodeException))
 
 (defn data->clj
   [data]
-  (parse-string (.getString data)))
+  (parse-string (apply str (map #(char (bit-and % 255)) data))
+                true))
 
 (defn clj->data
   [clj-map]
@@ -22,9 +24,11 @@
 
 (defn read-zk
   [curator & [id]]
-  (->> (path id)
-       (riak-mesos.curator/read-path curator)
-       data->clj))
+  (try (->> (path id)
+            (riak-mesos.curator/read-path curator)
+            :data
+            data->clj)
+       (catch KeeperException$NoNodeException e nil)))
 
 (defn all-clusters
   [curator]
@@ -32,19 +36,22 @@
 
 (defn exists?
   [curator id ctx]
-  (if-let [data (read-zk curator id)]
+  (when-let [data (read-zk curator id)]
     (assoc ctx :entry data)))
 
 (defn existed?
-  [ctx]
-  (nil? (get-in ctx [:entry :sentital])))
+  [curator id]
+  (nil? (read-zk curator id)))
 
 (defn write!
-  [curator id data]
-  (riak-mesos.curator/write-path curator 
-                                 (path id) 
-                                 (clj->data data)))
+  [curator id data ctx]
+  (let [data (when data (assoc data :id id))] 
+    (try (riak-mesos.curator/write-path curator 
+                                        (path id) 
+                                        (clj->data data))
+         (catch Exception e (println e)))
+    (assoc ctx :entry data)))
 
 (defn delete!
   [curator id]
-  (write! curator id {:sentinel nil})) 
+  (write! curator id nil {})) 
