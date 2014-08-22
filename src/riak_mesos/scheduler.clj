@@ -63,7 +63,10 @@
                                                                :docker "rtward/riak-mesos"
                                                                :volumes [{:container-path "/usr/local/lib/mesos"
                                                                           :host-path "/usr/local/lib"
-                                                                          :mode :ro}]}
+                                                                          :mode :ro}
+                                                                         {:container-path "/var/log/riak-executor/log"
+                                                                          :host-path "/var/log/riak-executor/log"
+                                                                          :mode :ro} ]}
                                                    :command {:shell false}}
                                         }]))
                                 (clj-mesos.scheduler/decline-offer driver (:id offer))))
