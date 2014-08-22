@@ -1,5 +1,6 @@
 (ns riak-mesos.scheduler
-  (:require [clj-mesos.scheduler])
+  (:require [clj-mesos.scheduler]
+            [riak-mesos.rest])
   (:gen-class))
 
 (def garbage-hack "I hate this")
@@ -60,15 +61,19 @@
                                 (clj-mesos.scheduler/decline-offer driver (:id offer))))
                             (catch Exception e
                               (.printStackTrace e)))))))))
+ 
 
 (defn -main
   [master]
-  (let [sched (scheduler)
+  (let [pending (atom #{})
+        running (atom #{})
+        sched (scheduler pending running)
         driver (clj-mesos.scheduler/driver sched
                                            {:user ""
                                             :name "riak"}
                                            master)]
     (clj-mesos.scheduler/start driver)
+    (riak-mesos.rest/start-server pending running 8081)
     (println "started")
     (Thread/sleep 1000000)))
 
@@ -90,10 +95,11 @@
       (println e)
       )
     )
-(bean org.apache.mesos.Protos$ContainerInfo$DockerInfo)
+  (bean org.apache.mesos.Protos$ContainerInfo$DockerInfo)
   (let [node 1
         offer {:slave-id "aoeu"}
         ] (clj-mesos.marshalling/map->proto org.apache.mesos.Protos$TaskInfo {:name "Riak"
+<<<<<<< HEAD
                                         :task-id (str "riak-node-" node)
                                         :slave-id (:slave-id offer)
                                         :resources {:cpus 2.0
@@ -108,5 +114,17 @@
                                                                                :mode :ro}]}
                                                         :command {:shell false}}
                                         }))
+=======
+                                                                              :task-id (str "riak-node-" node)
+                                                                              :slave-id (:slave-id offer)
+                                                                              :resources {:cpus 1.0
+                                                                                          :mem 200.0}
+                                                                              :container {:type :docker :Docker {:image "rtward/riak-mesos"}}
+                                                                              :command {}
+                                                                              ;:executor-info {:executor-id (str "riak-node-executor-" node)
+                                                                              ;                :container {:image "rtward/riak-mesos"}
+                                                                              ;                :command {}}
+                                                                              }))
+>>>>>>> daac222f5b2b6c3fd0b29abb9da7df084cc22eae
   (-main)
   )
