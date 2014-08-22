@@ -2,37 +2,46 @@
   (:require [clj-mesos.scheduler])
   (:gen-class))
 
+(def garbage-hack "I hate this")
 
 (defn scheduler
   []
-  (let [pending (atom #{1 2 3})]
+  (let [pending (atom #{1 2})
+        used-hosts (atom #{})]
     (clj-mesos.scheduler/scheduler
       (statusUpdate [driver status]
                     (println "got status" status))
       (resourceOffers [driver offers]
-                      (when (seq @pending)
-                        (doseq [offer offers
-                                :let [{:keys [cpus mem]} (:resources offer)
-                                      node (first @pending)]]
-                          (if (and (>= cpus 2.0)
-                                   (>= mem 2000.0))
-                            (do (swap! pending disj node)
-                                (println "launching task for node" node "(offer)" offer)
-                                (clj-mesos.scheduler/launch-tasks
-                                  driver
-                                  (:id offer)
-                                  [{:name "Riak"
-                                    :task-id (str "riak-node-" node)
-                                    :slave-id (:slave-id offer)
-                                    :resources {:cpus 2.0
-                                                :mem 2000.0}
-                                    :container {:type :docker :docker "rtward/riak-mesos"}
-                                    :command {:shell false}
-                                    ;:executor-info {:executor-id (str "riak-node-executor-" node)
-                                    ;                :container {:image "rtward/riak-mesos"}
-                                    ;                :command {}}
-                                    }]))
-                            (do (println "yay being a good citizen") (clj-mesos.scheduler/decline-offer driver offer)))))))))
+                      (future
+                        (locking garbage-hack
+                          (try
+                            (doseq [offer offers
+                                    :let [{:keys [cpus mem]} (:resources offer)
+                                          node (first @pending)]]
+                              (if (and node
+                                       (>= cpus 2.0)
+                                       (>= mem 2000.0)
+                                       (not (contains? @used-hosts (:hostname offer))))
+                                (do (swap! pending disj node)
+                                    (swap! used-hosts conj (:hostname offer))
+                                    (println "launching task for node" node "(offer)" offer)
+                                    (clj-mesos.scheduler/launch-tasks
+                                      driver
+                                      (:id offer)
+                                      [{:name "Riak"
+                                        :task-id (str "riak-node-" node)
+                                        :slave-id (:slave-id offer)
+                                        :resources {:cpus 2.0
+                                                    :mem 2000.0}
+                                        :container {:type :docker :docker "rtward/riak-mesos"}
+                                        :command {:shell false}
+                                        ;:executor-info {:executor-id (str "riak-node-executor-" node)
+                                        ;                :container {:image "rtward/riak-mesos"}
+                                        ;                :command {}}
+                                        }]))
+                                (clj-mesos.scheduler/decline-offer driver (:id offer))))
+                            (catch Exception e
+                              (.printStackTrace e)))))))))
 
 (defn -main
   [master]
