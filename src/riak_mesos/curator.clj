@@ -41,7 +41,7 @@
    (let [stat (Stat.)]
      {:data (.. curator
                 (getData)
-                (storingStatIn)
+                (storingStatIn stat)
                 (forPath path))
       :stat (bean stat)})))
 
