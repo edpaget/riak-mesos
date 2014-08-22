@@ -66,7 +66,7 @@
                                                                           :mode :ro}
                                                                          {:container-path "/var/log/riak-executor"
                                                                           :host-path "/var/log/riak-executor"
-                                                                          :mode :ro} ]}
+                                                                          :mode :rw} ]}
                                                    :command {:shell false}}
                                         }]))
                                 (clj-mesos.scheduler/decline-offer driver (:id offer))))
