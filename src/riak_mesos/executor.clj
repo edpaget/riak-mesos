@@ -27,5 +27,6 @@
 (defn -main
   [master]
   (let [exec (riak-executor)
-        driver (exec/driver exec)])
-  (executor/start driver))
+        driver (exec/driver exec)]
+     (exec/start driver)
+  (Thread/sleep 100000)))
