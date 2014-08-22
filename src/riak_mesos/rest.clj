@@ -1,48 +1,45 @@
 (ns riak-mesos.rest
   (:require [compojure.core :refer [routes ANY]]
+            [clojure.set :refer [difference]]
             [ring.middleware.json :refer [wrap-json-response wrap-json-body]]
-            [riak-mesos.state :as state]
             [riak-mesos.curator :refer [make-curator]]
             [org.httpkit.server :refer [run-server]]
             [liberator.core :refer [resource]]))
 
-(defn body
+(defn nodes
   [ctx]
-  (get-in ctx [:request :body]))
+  (get-in ctx [:request :body "nodes"]))
 
-(defn riak-clusters
-  [curator]
-  (resource 
-    :allowed-methods [:get :post]
-    :available-media-types ["application/json"]
-    :handle-ok (fn [_] (state/all-clusters curator))
-    :handle-created (fn [ctx] (:entry ctx))
-    :post! (fn [ctx] (state/write! curator 1 (body ctx) ctx))))
+(comment (defn riak-clusters
+           [curator]
+           (resource 
+             :allowed-methods [:get :post]
+             :available-media-types ["application/json"]
+             :handle-ok (fn [_] (state/all-clusters curator))
+             :handle-created (fn [ctx] (:entry ctx))
+             :post! (fn [ctx] (state/write! curator 1 (body ctx) ctx)))))
 
 (defn riak-cluster 
-  [curator id]
+  [pending running]
   (resource 
-    :allowed-methods [:get :put :delete]
+    :allowed-methods [:get :post]
+    :allowed? {:post (fn [ctx] (> (nodes ctx) (count @running)))}
     :available-media-types ["application/json"]
-    :exists? (fn [ctx] (state/exists? curator id ctx))
-    :existed? (fn [_] (state/existed? curator id))
-    :handle-ok (fn [ctx] (:entry ctx))
-    :put! (fn [ctx] (state/write! curator id (body ctx) ctx))
-    :delete! (fn [_] (state/delete! curator id))))
+    :handle-ok (fn [_] {:nodes (count @running)})
+    :post! (fn [ctx] 
+             (let [pending-nodes (difference (into #{} (range 0 (nodes ctx))) 
+                                             @running)] 
+               (swap! pending merge pending-nodes)))))
 
 (defn app-routes
-  [curator]
+  [pending running]
   (-> (routes
-        (ANY "/riak_clusters" [] (riak-clusters curator))
-        (ANY "/riak_clusters/:id" [id] (riak-cluster curator id)))
+        (ANY "/riak_cluster" [] (riak-cluster pending running))
+        ;;(ANY "/riak_clusters/:id" [id] (riak-cluster curator id))
+        )
       wrap-json-response
       wrap-json-body))
 
 (defn start-server
-  [zks port]
-  (let [curator (make-curator zks)] 
-    (run-server (app-routes curator) {:port port})))
-
-(defn -main
-  [& [zks port]]
-  (start-server zks (Integer/parseInt port)))
+  [pending running port]
+  (run-server (app-routes pending running) {:port port}))

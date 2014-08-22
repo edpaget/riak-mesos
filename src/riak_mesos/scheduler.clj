@@ -8,7 +8,7 @@
   []
   (let [pending (atom #{1 2})
         used-hosts (atom #{})]
-    (clj-mesos.scheduler/scheduler
+   (clj-mesos.scheduler/scheduler
       (statusUpdate [driver status]
                     (println "got status" status))
       (resourceOffers [driver offers]
