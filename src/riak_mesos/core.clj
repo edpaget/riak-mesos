@@ -2,9 +2,9 @@
   (:require [clj-mesos.scheduler :as sch]))
 
 (def riak-scheduler (sch/scheduler
-                     (resource-offers [driver offers]
+                     (resourceOffers [driver offers]
                                       (let [[offer] offers]
-                                        (sch/launchTasks driver (:offer-id offer)
+                                        (sch/launch-tasks driver (:offer-id offer)
                                                          [{:name "riak-task"
                                                            :task-id "riak-01"
                                                            :slave-id (:slave-id offer)
@@ -13,5 +13,5 @@
                                                            :command {:value "sleep 10"}}])))))
 
 (defn -main
-  [master]
+  [& master]
   #_(sch/run-scheduler master))
