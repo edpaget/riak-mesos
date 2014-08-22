@@ -1,6 +1,6 @@
 (ns riak-mesos.state
   (:require [riak-mesos.curator]
-            [cheshire.core :refer [parse-string]]))
+            [cheshire.core :refer [parse-string generate-string]]))
 
 (defn data->clj
   [data]
@@ -23,7 +23,7 @@
 (defn read-zk
   [curator & [id]]
   (->> (path id)
-       (riak-mesos.curator/read-data curator)
+       (riak-mesos.curator/read-path curator)
        data->clj))
 
 (defn all-clusters
@@ -41,9 +41,9 @@
 
 (defn write!
   [curator id data]
-  (riak-mesos.curator/write-data curator 
+  (riak-mesos.curator/write-path curator 
                                  (path id) 
-                                 (clj-map data)))
+                                 (clj->data data)))
 
 (defn delete!
   [curator id]
