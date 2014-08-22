@@ -10,28 +10,29 @@
       (statusUpdate [driver status]
                     (println "got status" status))
       (resourceOffers [driver offers]
-                       (when (seq @pending)
-                         (doseq [offer offers
-                                 :let [{:keys [cpus mem]} (:resources offer)
-                                       node (first @pending)]
-                                 :when (and (>= cpus 2.0)
-                                            (>= mem 2000.0))]
-                           (swap! pending disj node)
-                           (println "launching task for node" node "(offer)" offer)
-                           (clj-mesos.scheduler/launch-tasks
-                                   driver
-                                   (:id offer)
-                                   [{:name "Riak"
-                                     :task-id (str "riak-node-" node)
-                                     :slave-id (:slave-id offer)
-                                     :resources {:cpus 2.0
-                                                 :mem 2000.0}
-                                     :container {:type :docker :docker "rtward/riak-mesos"}
-                                     :command {:shell false}
-                                     ;:executor-info {:executor-id (str "riak-node-executor-" node)
-                                     ;                :container {:image "rtward/riak-mesos"}
-                                     ;                :command {}}
-                                     }])))))))
+                      (when (seq @pending)
+                        (doseq [offer offers
+                                :let [{:keys [cpus mem]} (:resources offer)
+                                      node (first @pending)]]
+                          (if (and (>= cpus 2.0)
+                                   (>= mem 2000.0))
+                            (do (swap! pending disj node)
+                                (println "launching task for node" node "(offer)" offer)
+                                (clj-mesos.scheduler/launch-tasks
+                                  driver
+                                  (:id offer)
+                                  [{:name "Riak"
+                                    :task-id (str "riak-node-" node)
+                                    :slave-id (:slave-id offer)
+                                    :resources {:cpus 2.0
+                                                :mem 2000.0}
+                                    :container {:type :docker :docker "rtward/riak-mesos"}
+                                    :command {:shell false}
+                                    ;:executor-info {:executor-id (str "riak-node-executor-" node)
+                                    ;                :container {:image "rtward/riak-mesos"}
+                                    ;                :command {}}
+                                    }]))
+                            (do (println "yay being a good citizen") (clj-mesos.scheduler/decline-offer driver offer)))))))))
 
 (defn -main
   [master]
