@@ -1,6 +1,6 @@
 (ns riak-mesos.rest
   (:require [compojure.core :refer [routes ANY]]
-            [clojure.set :refer [difference]]
+            [clojure.set :refer [difference union]]
             [ring.middleware.json :refer [wrap-json-response wrap-json-body]]
             [riak-mesos.curator :refer [make-curator]]
             [org.httpkit.server :refer [run-server]]
@@ -29,7 +29,7 @@
     :post! (fn [ctx] 
              (let [pending-nodes (difference (into #{} (range 0 (nodes ctx))) 
                                              @running)] 
-               (swap! pending merge pending-nodes)))))
+               (swap! pending union pending-nodes)))))
 
 (defn app-routes
   [pending running]
