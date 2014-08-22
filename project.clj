@@ -7,7 +7,7 @@
                  [liberator "0.12.0"]
                  [compojure "1.1.3"]
                  [http-kit "2.1.18"]
-                 [clj-mesos "0.20.1"]
+                 [clj-mesos "0.20.4"]
                  [ring/ring-json "0.3.1"]
                  [cheshire "5.3.1"]
                  [org.apache.curator/curator-test "2.4.0"]

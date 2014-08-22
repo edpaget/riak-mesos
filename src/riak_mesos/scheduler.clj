@@ -49,9 +49,13 @@
                                                     :mem 2000.0}
                                         ;:container {:type :docker :docker "rtward/riak-mesos"}
                                         ;:command {:shell false}
-                                        :executor-info {:executor-id (str "riak-node-executor-" node)
-                                                        :container {:type :docker :docker "rtward/riak-mesos"}
-                                                        :command {:shell false}}
+                                        :executor {:executor-id (str "riak-node-executor-" node)
+                                                   :container {:type :docker
+                                                               :docker "rtward/riak-mesos"
+                                                               :volumes [{:container-path "/usr/local/lib/mesos"
+                                                                          :host-path "/usr/local/lib"
+                                                                          :mode :ro}]}
+                                                   :command {:shell false}}
                                         }]))
                                 (clj-mesos.scheduler/decline-offer driver (:id offer))))
                             (catch Exception e
@@ -70,7 +74,11 @@
 
 (comment
   (try
-    (clj-mesos.marshalling/map->proto org.apache.mesos.Protos$ContainerInfo {:type :docker :docker "rtward/riak-mesos"})
+    (clj-mesos.marshalling/map->proto org.apache.mesos.Protos$ContainerInfo {:type :docker
+                                                                    :docker "rtward/riak-mesos"
+                                                                    :volumes [{:container-path "/usr/local/lib/mesos"
+                                                                               :host-path "/usr/local/lib"
+                                                                               :mode :ro}]})
     (catch Exception e
       (println e)
       (println (.getFullName (:field (ex-data e))))
@@ -86,15 +94,19 @@
   (let [node 1
         offer {:slave-id "aoeu"}
         ] (clj-mesos.marshalling/map->proto org.apache.mesos.Protos$TaskInfo {:name "Riak"
-                                                                               :task-id (str "riak-node-" node)
-                                                                               :slave-id (:slave-id offer)
-                                                                               :resources {:cpus 1.0
-                                                                                           :mem 200.0}
-                                                                               :container {:type :docker :Docker {:image "rtward/riak-mesos"}}
-                                                                               :command {}
-                                                                               ;:executor-info {:executor-id (str "riak-node-executor-" node)
-                                                                               ;                :container {:image "rtward/riak-mesos"}
-                                                                      ;                :command {}}
-                                                                      }))
+                                        :task-id (str "riak-node-" node)
+                                        :slave-id (:slave-id offer)
+                                        :resources {:cpus 2.0
+                                                    :mem 2000.0}
+                                        ;:container {:type :docker :docker "rtward/riak-mesos"}
+                                        ;:command {:shell false}
+                                        :executor {:executor-id (str "riak-node-executor-" node)
+                                                        :container {:type :docker
+                                                                    :docker "rtward/riak-mesos"
+                                                                    :volumes [{:container-path "/usr/local/lib/mesos"
+                                                                               :host-path "/usr/local/lib"
+                                                                               :mode :ro}]}
+                                                        :command {:shell false}}
+                                        }))
   (-main)
   )
