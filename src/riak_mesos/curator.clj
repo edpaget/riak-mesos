@@ -1,4 +1,4 @@
-(ns disco.curator
+(ns riak-mesos.curator
   (:import [org.apache.curator.framework.recipes.cache NodeCache NodeCacheListener]
            [org.apache.curator.framework CuratorFrameworkFactory]
            [org.apache.curator.retry RetryNTimes]

@@ -12,4 +12,9 @@
                  [cheshire "5.3.1"]
                  [org.apache.curator/curator-test "2.4.0"]
                  [org.apache.curator/curator-x-discovery "2.4.0"]]
-  )
+  ;; :plugins
+  ;; [[s3-wagon-private "1.1.2"]
+  ;;  [theladders/lein-uberjar-deploy "1.0.0"]]
+  ;; :repositories [["private" {:url "s3p://riak-mesos/releases/" :creds :gpg}]]
+  ;; :main riak-mesos.core
+)
