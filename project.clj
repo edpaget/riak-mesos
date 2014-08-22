@@ -4,9 +4,12 @@
   :license {:name "Eclipse Public License"
             :url "http://www.eclipse.org/legal/epl-v10.html"}
   :dependencies [[org.clojure/clojure "1.6.0"]
-                 [liberator "0.12.0"] 
+                 [liberator "0.12.0"]
                  [compojure "1.1.3"]
                  [http-kit "2.1.18"]
                  [clj-mesos "0.20.1"]
+                 [ring/ring-json "0.3.1"]
+                 [cheshire "5.3.1"]
                  [org.apache.curator/curator-test "2.4.0"]
-                 [org.apache.curator/curator-x-discovery "2.4.0"]])
+                 [org.apache.curator/curator-x-discovery "2.4.0"]]
+  :main riak-mesos.core)
