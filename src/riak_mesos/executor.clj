@@ -14,7 +14,7 @@
                                                               :message "Riak Task is running" } ))
                  (frameworkMessage [driver bytes] (let [command-string (read-string (String. bytes "UTF-8"))]
                                                     (println "[frameworkMessage] Running command " command-string )
-                                                    (future (apply clojure.java.shell/sh  command-string ))))))
+                                                    (future (apply clojure.java.shell/sh  (clojure.string/split command-string #"\s+") ))))))
 
 
 
