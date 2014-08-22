@@ -7,7 +7,7 @@
                  [liberator "0.12.0"]
                  [compojure "1.1.3"]
                  [http-kit "2.1.18"]
-                 [clj-mesos "0.1.0-SNAPSHOT"]
+                 [clj-mesos "0.20.0"]
                  [org.apache.curator/curator-test "2.4.0"]
                  [org.apache.curator/curator-x-discovery "2.4.0"]]
   :main riak-mesos.core)
