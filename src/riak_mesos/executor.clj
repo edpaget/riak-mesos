@@ -9,6 +9,7 @@
                                               (println "Framework Registered"))
                  (launchTask [driver task-info]
                              (println "[launchTask] Sending status Update")
+                             (println "[launchTask] Task-ID" (:task-id task-info) )
                              (try
                                (exec/send-status-update driver {:task-id (:task-id task-info)
                                                                :task-state 1
