@@ -6,9 +6,9 @@
 (def garbage-hack "I hate this")
 
 (defn scheduler
+  [pending running]
   []
-  (let [pending (atom #{1 2})
-        used-hosts (atom #{})
+  (let [used-hosts (atom #{})
         ;;this contains pairs of [executor-id slave-id]
         active-executors (atom #{})
         executor-id->hostname (atom {})]
@@ -24,7 +24,15 @@
                               (println "sending command" command)
                               (clj-mesos.scheduler/send-framework-message driver executor-id slave-id (.getBytes (pr-str command))))))
                         (when (= :task-running (:state status))
-                          (swap! active-executors conj [(:executor-id status) (:slave-id status)])))))
+                          (swap! active-executors conj [(:executor-id status) (:slave-id status)]))
+                        (let [id-from status (comp #(Integer/parseInt %) str last :task-id)] 
+                          (cond 
+                            (= (:task-state status) :task-staging) nil
+                            (= (:task-state status) :task-starting) nil
+                            (= (:task-state status) :task-running)
+                            (swap! running conj (id-from-status status))
+                            true 
+                            (swap! pending conj (id-from-status status)))))))
       (resourceOffers [driver offers]
                       (future
                         (locking garbage-hack
@@ -61,7 +69,6 @@
                                 (clj-mesos.scheduler/decline-offer driver (:id offer))))
                             (catch Exception e
                               (.printStackTrace e)))))))))
- 
 
 (defn -main
   [master]
@@ -80,10 +87,10 @@
 (comment
   (try
     (clj-mesos.marshalling/map->proto org.apache.mesos.Protos$ContainerInfo {:type :docker
-                                                                    :docker "rtward/riak-mesos"
-                                                                    :volumes [{:container-path "/usr/local/lib/mesos"
-                                                                               :host-path "/usr/local/lib"
-                                                                               :mode :ro}]})
+                                                                             :docker "rtward/riak-mesos"
+                                                                             :volumes [{:container-path "/usr/local/lib/mesos"
+                                                                                        :host-path "/usr/local/lib"
+                                                                                        :mode :ro}]})
     (catch Exception e
       (println e)
       (println (.getFullName (:field (ex-data e))))
@@ -99,32 +106,19 @@
   (let [node 1
         offer {:slave-id "aoeu"}
         ] (clj-mesos.marshalling/map->proto org.apache.mesos.Protos$TaskInfo {:name "Riak"
-<<<<<<< HEAD
-                                        :task-id (str "riak-node-" node)
-                                        :slave-id (:slave-id offer)
-                                        :resources {:cpus 2.0
-                                                    :mem 2000.0}
-                                        ;:container {:type :docker :docker "rtward/riak-mesos"}
-                                        ;:command {:shell false}
-                                        :executor {:executor-id (str "riak-node-executor-" node)
-                                                        :container {:type :docker
-                                                                    :docker "rtward/riak-mesos"
-                                                                    :volumes [{:container-path "/usr/local/lib/mesos"
-                                                                               :host-path "/usr/local/lib"
-                                                                               :mode :ro}]}
-                                                        :command {:shell false}}
-                                        }))
-=======
                                                                               :task-id (str "riak-node-" node)
                                                                               :slave-id (:slave-id offer)
-                                                                              :resources {:cpus 1.0
-                                                                                          :mem 200.0}
-                                                                              :container {:type :docker :Docker {:image "rtward/riak-mesos"}}
-                                                                              :command {}
-                                                                              ;:executor-info {:executor-id (str "riak-node-executor-" node)
-                                                                              ;                :container {:image "rtward/riak-mesos"}
-                                                                              ;                :command {}}
+                                                                              :resources {:cpus 2.0
+                                                                                          :mem 2000.0}
+                                                                              ;:container {:type :docker :docker "rtward/riak-mesos"}
+                                                                              ;:command {:shell false}
+                                                                              :executor {:executor-id (str "riak-node-executor-" node)
+                                                                                         :container {:type :docker
+                                                                                                     :docker "rtward/riak-mesos"
+                                                                                                     :volumes [{:container-path "/usr/local/lib/mesos"
+                                                                                                                :host-path "/usr/local/lib"
+                                                                                                                :mode :ro}]}
+                                                                                         :command {:shell false}}
                                                                               }))
->>>>>>> daac222f5b2b6c3fd0b29abb9da7df084cc22eae
   (-main)
   )
