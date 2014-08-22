@@ -25,7 +25,7 @@
                               (clj-mesos.scheduler/send-framework-message driver executor-id slave-id (.getBytes (pr-str command))))))
                         (when (= :task-running (:state status))
                           (swap! active-executors conj [(:executor-id status) (:slave-id status)]))
-                        (let [id-from status (comp #(Integer/parseInt %) str last :task-id)] 
+                        (let [id-from-status (comp #(Integer/parseInt %) str last :task-id)] 
                           (cond 
                             (= (:task-state status) :task-staging) nil
                             (= (:task-state status) :task-starting) nil
