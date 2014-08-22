@@ -7,10 +7,23 @@
 (defn scheduler
   []
   (let [pending (atom #{1 2})
-        used-hosts (atom #{})]
+        used-hosts (atom #{})
+        ;;this contains pairs of [executor-id slave-id]
+        active-executors (atom #{})
+        executor-id->hostname (atom {})]
     (clj-mesos.scheduler/scheduler
       (statusUpdate [driver status]
-                    (println "got status" status))
+                    (future
+                      (locking garbage-hack
+                        (println "got status" status)
+                        (when-let [[executor-id slave-id] (first @active-executors)]
+                          (future
+                            (Thread/sleep 30000)
+                            (let [command ["riak-admin" "join" "-f" (get executor-id->hostname executor-id)]]
+                              (println "sending command" command)
+                              (clj-mesos.scheduler/send-framework-message driver executor-id slave-id (.getBytes (pr-str command))))))
+                        (when (= :task-running (:state status))
+                          (swap! active-executors conj [(:executor-id status) (:slave-id status)])))))
       (resourceOffers [driver offers]
                       (future
                         (locking garbage-hack
@@ -24,6 +37,7 @@
                                        (not (contains? @used-hosts (:hostname offer))))
                                 (do (swap! pending disj node)
                                     (swap! used-hosts conj (:hostname offer))
+                                    (swap! executor-id->hostname assoc (str "riak-node-executor-" node) (:hostname offer))
                                     (println "launching task for node" node "(offer)" offer)
                                     (clj-mesos.scheduler/launch-tasks
                                       driver
@@ -33,11 +47,11 @@
                                         :slave-id (:slave-id offer)
                                         :resources {:cpus 2.0
                                                     :mem 2000.0}
-                                        :container {:type :docker :docker "rtward/riak-mesos"}
-                                        :command {:shell false}
-                                        ;:executor-info {:executor-id (str "riak-node-executor-" node)
-                                        ;                :container {:image "rtward/riak-mesos"}
-                                        ;                :command {}}
+                                        ;:container {:type :docker :docker "rtward/riak-mesos"}
+                                        ;:command {:shell false}
+                                        :executor-info {:executor-id (str "riak-node-executor-" node)
+                                                        :container {:type :docker :docker "rtward/riak-mesos"}
+                                                        :command {:shell false}}
                                         }]))
                                 (clj-mesos.scheduler/decline-offer driver (:id offer))))
                             (catch Exception e
