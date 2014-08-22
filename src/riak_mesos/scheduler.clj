@@ -64,8 +64,8 @@
                                                                :volumes [{:container-path "/usr/local/lib/mesos"
                                                                           :host-path "/usr/local/lib"
                                                                           :mode :ro}
-                                                                         {:container-path "/var/log/riak-executor/log"
-                                                                          :host-path "/var/log/riak-executor/log"
+                                                                         {:container-path "/var/log/riak-executor"
+                                                                          :host-path "/var/log/riak-executor"
                                                                           :mode :ro} ]}
                                                    :command {:shell false}}
                                         }]))
