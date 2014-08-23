@@ -21,7 +21,7 @@
                           (let [command-string (read-string (String. bytes "UTF-8"))]
                             (println "[frameworkMessage] Running command " command-string )
                             (future (try
-                                      (println (apply clojure.java.shell/sh  (clojure.string/split command-string #"\s+") ))
+                                      (println (apply clojure.java.shell/sh command-string))
                                       (catch Exception e
                                         (.printStackTrace e)))))
                           (catch Exception e
