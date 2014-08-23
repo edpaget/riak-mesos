@@ -8,7 +8,7 @@
   (let [info (atom nil)]
     (exec/executor
       (registered [driver executor framework slave]
-                  (reset! info {:executor executor :slave slave})
+                  (reset! info {:executor (:executor-id executor) :slave (:slave-id slave)})
                   (println "Framework Registered"))
       (launchTask [driver task-info]
                   (println "[launchTask] Sending status Update")
