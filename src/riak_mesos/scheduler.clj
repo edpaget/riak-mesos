@@ -20,7 +20,7 @@
                         (when-let [[executor-id slave-id] (first @active-executors)]
                           (future
                             (Thread/sleep 30000)
-                            (let [command ["riak-admin" "join" "-f" (get executor-id->hostname executor-id)]]
+                            (let [command ["riak-admin" "join" "-f" (get executor-id->hostname (:executor-id status))]]
                               (println "sending command" command)
                               (clj-mesos.scheduler/send-framework-message driver executor-id slave-id (.getBytes (pr-str command))))))
                         (when (= :task-running (:state status))
