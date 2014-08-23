@@ -33,10 +33,11 @@
                             (cond 
                               (= (:task-state status) :task-staging) nil
                               (= (:task-state status) :task-starting) nil
-                              (= (:task-state status) :task-running)
-                              (swap! running conj (id-from-status status))
-                              true 
-                              (swap! pending conj (id-from-status status)))))
+                              (= (:task-state status) :task-running) nil
+                              :else
+                              (do
+                                (swap! running disj (id-from-status status))
+                                (swap! pending conj (id-from-status status))))))
                         (catch Exception e
                           (.printStackTrace e)))))
       (resourceOffers [driver offers]
@@ -51,6 +52,7 @@
                                        (>= mem 200.0)
                                        (not (contains? @used-hosts (:hostname offer))))
                                 (do (swap! pending disj node)
+                                    (swap! running conj node)
                                     (swap! used-hosts conj (:hostname offer))
                                     (swap! slave-id->host+exec assoc (:slave-id offer) {:hostname (:hostname offer) :executor (str "riak-node-executor-" node)})
                                     (println "launching task for node" node "(offer)" offer)
