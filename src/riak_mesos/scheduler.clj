@@ -13,6 +13,11 @@
         ;;this contains pairs of [executor-id slave-id]
         active-executors (atom #{})
         slave-id->host+exec (atom {})]
+    (def active-executors active-executors)
+    (def slave-id->host+exec slave-id->host+exec)
+    (def used-hosts used-hosts)
+    (def pending pending)
+    (def running running)
     (clj-mesos.scheduler/scheduler
       (statusUpdate [driver status]
                     (future
