@@ -15,24 +15,28 @@
     (clj-mesos.scheduler/scheduler
       (statusUpdate [driver status]
                     (future
-                      (locking garbage-hack
-                        (println "got status" status)
-                        (when-let [[executor-id slave-id] (first @active-executors)]
-                          (future
-                            (Thread/sleep 30000)
-                            (let [command ["riak-admin" "join" "-f" (str "riak@" (get @slave-id->hostname (:slave-id status)))]]
-                              (println "sending command" command)
-                              (clj-mesos.scheduler/send-framework-message driver executor-id slave-id (.getBytes (pr-str command))))))
-                        (when (= :task-running (:state status))
-                          (swap! active-executors conj [(:executor-id status) (:slave-id status)]))
-                        (let [id-from-status (comp #(Integer/parseInt %) str last :task-id)] 
-                          (cond 
-                            (= (:task-state status) :task-staging) nil
-                            (= (:task-state status) :task-starting) nil
-                            (= (:task-state status) :task-running)
-                            (swap! running conj (id-from-status status))
-                            true 
-                            (swap! pending conj (id-from-status status)))))))
+                      (try
+                        (locking garbage-hack
+                          (println "got status" status)
+                          (when-let [[executor-id slave-id] (first @active-executors)]
+                            (future
+                              (let [command ["riak-admin" "join" "-f" (str "riak@" (get @slave-id->hostname (:slave-id status)))]]
+                                (println "sending command" command)
+                                (Thread/sleep 30000)
+                                (println "sent")
+                                (clj-mesos.scheduler/send-framework-message driver executor-id slave-id (.getBytes (pr-str command))))))
+                          (when (= :task-running (:state status))
+                            (swap! active-executors conj [(:executor-id status) (:slave-id status)]))
+                          (let [id-from-status (comp #(Integer/parseInt %) str last :task-id)] 
+                            (cond 
+                              (= (:task-state status) :task-staging) nil
+                              (= (:task-state status) :task-starting) nil
+                              (= (:task-state status) :task-running)
+                              (swap! running conj (id-from-status status))
+                              true 
+                              (swap! pending conj (id-from-status status)))))
+                        (catch Exception e
+                          (.printStackTrace e)))))
       (resourceOffers [driver offers]
                       (future
                         (locking garbage-hack
