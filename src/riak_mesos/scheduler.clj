@@ -11,7 +11,7 @@
   (let [used-hosts (atom #{})
         ;;this contains pairs of [executor-id slave-id]
         active-executors (atom #{})
-        executor-id->hostname (atom {})]
+        slave-id->hostname (atom {})]
     (clj-mesos.scheduler/scheduler
       (statusUpdate [driver status]
                     (future
@@ -20,7 +20,7 @@
                         (when-let [[executor-id slave-id] (first @active-executors)]
                           (future
                             (Thread/sleep 30000)
-                            (let [command ["riak-admin" "join" "-f" (get executor-id->hostname (:executor-id status))]]
+                            (let [command ["riak-admin" "join" "-f" (get slave-id->hostname (:slave-id status))]]
                               (println "sending command" command)
                               (clj-mesos.scheduler/send-framework-message driver executor-id slave-id (.getBytes (pr-str command))))))
                         (when (= :task-running (:state status))
@@ -46,7 +46,7 @@
                                        (not (contains? @used-hosts (:hostname offer))))
                                 (do (swap! pending disj node)
                                     (swap! used-hosts conj (:hostname offer))
-                                    (swap! executor-id->hostname assoc (str "riak-node-executor-" node) (:hostname offer))
+                                    (swap! slave-id->hostname assoc (:slave-id offer) (:hostname offer))
                                     (println "launching task for node" node "(offer)" offer)
                                     (clj-mesos.scheduler/launch-tasks
                                       driver
