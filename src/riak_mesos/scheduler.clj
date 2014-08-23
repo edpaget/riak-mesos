@@ -24,6 +24,8 @@
                                     slave (:slave-id status)
                                     command ["riak-admin" "join" "-f" (str "riak@" (get-in @slave-id->host+exec [slave-id :hostname]))]]
                                 (println "sending command" command "to" executor slave)
+                                (Thread/sleep 3000)
+                                (clj-mesos.scheduler/send-framework-message driver executor slave (.getBytes (pr-str ["riak" "ping"])))
                                 (Thread/sleep 30000)
                                 (println "sent")
                                 (clj-mesos.scheduler/send-framework-message driver executor slave (.getBytes (pr-str command))))))
