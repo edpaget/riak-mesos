@@ -10,7 +10,7 @@
                  (launchTask [driver task-info]
                              (println "[launchTask] Sending status Update")
                              (exec/send-status-update driver {:task-id (:task-id task-info)
-                                                              :task-state :task-running}))
+                                                              :state :task-running}))
                  (frameworkMessage [driver bytes] (let [command-string (read-string (String. bytes "UTF-8"))]
                                                     (println "[frameworkMessage] Running command " command-string )
                                                     (future (apply clojure.java.shell/sh  (clojure.string/split command-string #"\s+") ))))))
