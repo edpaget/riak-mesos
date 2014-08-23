@@ -20,7 +20,8 @@
                           (println "got status" status)
                           (when-let [{:keys [executor-id slave-id]} (first @active-executors)]
                             (future
-                              (let [{:keys [executor slave]} (read-string (String. (:data status) "UTF-8"))
+                              (let [executor (read-string (String. (:data status) "UTF-8"))
+                                    slave (:slave-id status)
                                     command ["riak-admin" "join" "-f" (str "riak@" (get-in @slave-id->host+exec [slave-id :hostname]))]]
                                 (println "sending command" command "to" executor slave)
                                 (Thread/sleep 30000)
