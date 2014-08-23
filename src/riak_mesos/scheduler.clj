@@ -49,8 +49,8 @@
                                     :let [{:keys [cpus mem]} (:resources offer)
                                           node (first @pending)]]
                               (if (and node
-                                       (>= cpus 1.0)
-                                       (>= mem 200.0)
+                                       (>= cpus 2.0)
+                                       (>= mem 3000.0)
                                        (not (contains? @used-hosts (:hostname offer))))
                                 (do (swap! pending disj node)
                                     (swap! running conj node)
@@ -63,8 +63,8 @@
                                       (doto [{:name "Riak"
                                         :task-id (str "riak-node-" node)
                                         :slave-id (:slave-id offer)
-                                        :resources {:cpus 1.0
-                                                    :mem 200.0}
+                                        :resources {:cpus 2.0
+                                                    :mem 3000.0}
                                         ;:container {:type :docker :docker "rtward/riak-mesos"}
                                         ;:command {:shell false}
                                         :executor {:executor-id (str "riak-node-executor-" node)
