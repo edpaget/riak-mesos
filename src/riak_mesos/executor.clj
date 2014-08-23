@@ -19,7 +19,7 @@
 
 
 (defn -main
-  [master]
+  []
   (let [exec (riak-executor)
         driver (exec/driver exec)]
      (exec/start driver)

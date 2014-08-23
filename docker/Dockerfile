@@ -15,6 +15,5 @@ ENV MESOS_NATIVE_JAVA_LIBRARY /usr/local/lib/mesos/libmesos.so
 
 # Add our executor script
 RUN mkdir -p /etc/service/executor
-ADD bin/executor /etc/service/executor/run
-ADD http://riak-mesos.s3.amazonaws.com/releases/riak-mesos-0.1.0-SNAPSHOT-standalone.jar /etc/service/executor/executor.jar
-
+ADD bin/executor /etc/my_init.d/99_executor.sh
+ADD target/riak-mesos-0.1.0-SNAPSHOT-standalone.jar /etc/service/executor/executor.jar
