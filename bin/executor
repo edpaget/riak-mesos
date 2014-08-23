@@ -1,5 +1,8 @@
 #!/bin/sh
 
+export MESOS_NATIVE_JAVA_LIBRARY=/usr/local/lib/mesos/libmesos.so
+export MESOS_NATIVE_LIBRARY=/usr/local/lib/mesos/libmesos.so
+
 env > /var/log/riak-executor/environment
 
 mkdir -p /var/log/riak-executor
