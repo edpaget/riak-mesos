@@ -28,7 +28,8 @@
                                 (println "sent")
                                 (clj-mesos.scheduler/send-framework-message driver executor slave (.getBytes (pr-str command))))))
                           (when (= :task-running (:state status))
-                            (swap! active-executors conj (read-string (String. (:data status) "UTF-8"))))
+                            (swap! active-executors conj {:executor-id (read-string (String. (:data status) "UTF-8"))
+                                                          :slave-id (:slave-id status)}))
                           (let [id-from-status (comp #(Integer/parseInt %) str last :task-id)] 
                             (cond 
                               (= (:task-state status) :task-staging) nil
@@ -36,8 +37,8 @@
                               (= (:task-state status) :task-running) nil
                               :else
                               (do
-                                (swap! running disj (id-from-status status))
-                                (swap! pending conj (id-from-status status))))))
+                                #_(swap! running disj (id-from-status status))
+                              #_(swap! pending conj (id-from-status status))))))
                         (catch Exception e
                           (.printStackTrace e)))))
       (resourceOffers [driver offers]
@@ -59,7 +60,7 @@
                                     (clj-mesos.scheduler/launch-tasks
                                       driver
                                       (:id offer)
-                                      [{:name "Riak"
+                                      (doto [{:name "Riak"
                                         :task-id (str "riak-node-" node)
                                         :slave-id (:slave-id offer)
                                         :resources {:cpus 1.0
@@ -76,7 +77,7 @@
                                                                           :host-path "/var/log/riak-executor"
                                                                           :mode :rw} ]}
                                                    :command {:shell false}}
-                                        }]))
+                                        }] (println "launch-exec-info"))))
                                 (clj-mesos.scheduler/decline-offer driver (:id offer))))
                             (catch Exception e
                               (.printStackTrace e)))))))))
