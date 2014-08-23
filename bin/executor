@@ -3,7 +3,8 @@
 export MESOS_NATIVE_JAVA_LIBRARY=/usr/local/lib/mesos/libmesos.so
 export MESOS_NATIVE_LIBRARY=/usr/local/lib/mesos/libmesos.so
 
-env > /var/log/riak-executor/environment
+env > /mnt/mesos/sandbox/environment
 
-mkdir -p /var/log/riak-executor
-exec /usr/bin/java -cp /etc/service/executor/executor.jar clojure.main -m riak-mesos.executor 1>> /var/log/riak-executor/stdout 2>> /var/log/riak-executor/stderr
+EXECUTOR_LOG_DIR=/mnt/mesos/sandbox/executor
+mkdir -p $EXECUTOR_LOG_DIR
+exec /usr/bin/java -cp /etc/service/executor/executor.jar clojure.main -m riak-mesos.executor 1>> $EXECUTOR_LOG_DIR/stdout 2>> $EXECUTOR_LOG_DIR/stderr
