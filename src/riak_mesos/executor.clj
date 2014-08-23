@@ -5,20 +5,24 @@
   (:gen-class))
 
 (defn riak-executor []
-  (exec/executor (registered [driver executor framework slave]
-                             (println "Framework Registered"))
-                 (launchTask [driver task-info]
-                             (println "[launchTask] Sending status Update")
-                             (exec/send-status-update driver {:task-id (:task-id task-info)
-                                                              :state :task-running}))
-                 (frameworkMessage [driver bytes]
-                                   (try
-                                     (println "got framework message")
-                                     (let [command-string (read-string (String. bytes "UTF-8"))]
-                                       (println "[frameworkMessage] Running command " command-string )
-                                       (future (println (apply clojure.java.shell/sh  (clojure.string/split command-string #"\s+") ))))
-                                     (catch Exception e
-                                       (.printStackTrace e))))))
+  (let [info (atom nil)]
+    (exec/executor
+      (registered [driver executor framework slave]
+                  (reset! info {:executor executor :slave slave})
+                  (println "Framework Registered"))
+      (launchTask [driver task-info]
+                  (println "[launchTask] Sending status Update")
+                  (exec/send-status-update driver {:task-id (:task-id task-info)
+                                                   :state :task-running
+                                                   :data (.getBytes (pr-str @info))}))
+      (frameworkMessage [driver bytes]
+                        (try
+                          (println "got framework message")
+                          (let [command-string (read-string (String. bytes "UTF-8"))]
+                            (println "[frameworkMessage] Running command " command-string )
+                            (future (println (apply clojure.java.shell/sh  (clojure.string/split command-string #"\s+") ))))
+                          (catch Exception e
+                            (.printStackTrace e)))))))
 
 
 
