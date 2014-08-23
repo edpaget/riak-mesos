@@ -30,8 +30,8 @@
                            "application/json" {:nodes (count @running)}
                            "text/html" (slurp (io/resource "index.html"))))
     :post! (fn [ctx] 
-             (let [pending-nodes (difference (into #{} (range 0 (nodes ctx))) 
-                                             @running)] 
+             (let [pending-nodes (difference (set (range (nodes ctx))) 
+                                             (union @running @pending))]
                (swap! pending union pending-nodes)))))
 
 (defn app-routes
