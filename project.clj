@@ -6,6 +6,7 @@
   :dependencies [[org.clojure/clojure "1.6.0"]
                  [liberator "0.12.0"]
                  [compojure "1.1.3"]
+                 [org.clojure/tools.nrepl "0.2.4"]
                  [http-kit "2.1.18"]
                  [clj-mesos "0.20.4"]
                  [ring/ring-json "0.3.1"]

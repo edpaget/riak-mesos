@@ -1,6 +1,7 @@
 (ns riak-mesos.scheduler
   (:require [clj-mesos.scheduler]
             [riak-mesos.rest])
+  (:use [clojure.tools.nrepl.server :only  (start-server stop-server)])
   (:gen-class))
 
 (def garbage-hack "I hate this")
@@ -93,6 +94,7 @@
                                            {:user ""
                                             :name "riak"}
                                            master)]
+    (future (start-server :port 8090))
     (def the-magic-driver driver)
     (clj-mesos.scheduler/start driver)
     (riak-mesos.rest/start-server pending running 8081)
